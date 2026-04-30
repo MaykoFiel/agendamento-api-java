@@ -1,14 +1,13 @@
-# Estágio 1: Build com Gradle
+# Estágio 1: Build (Compilação) usando Gradle 7.6
 FROM gradle:7.6-jdk17 AS build
 WORKDIR /app
 COPY . .
-RUN chmod +x gradlew
-RUN ./gradlew build -x test
+# Forçamos o uso do Gradle da imagem (7.6) em vez do wrapper do projeto
+RUN gradle build -x test --no-daemon
 
-# Estágio 2: Execução com Java 17
+# Estágio 2: Run (Execução)
 FROM eclipse-temurin:17-jdk-alpine
 WORKDIR /app
-# Ajuste o nome do .jar abaixo se o seu projeto tiver outro nome no build/libs
 COPY --from=build /app/build/libs/*.jar app.jar
 EXPOSE 8081
 ENTRYPOINT ["java", "-jar", "app.jar"]
