@@ -1,23 +1,14 @@
-# Estágio 1: Build (Compilação usando Gradle)
+# Estágio 1: Build com Gradle
 FROM gradle:7.6-jdk17 AS build
 WORKDIR /app
+COPY . .
+RUN chmod +x gradlew
+RUN ./gradlew build -x test
 
-# Copia os arquivos de configuração do Gradle primeiro para aproveitar o cache
-COPY build.gradle settings.gradle ./
-COPY src ./src
-
-# Executa o build do projeto gerando o arquivo JAR
-RUN gradle clean bootJar --no-daemon
-
-# Estágio 2: Run (Execução em imagem leve)
-FROM openjdk:17-jdk-slim
+# Estágio 2: Execução com Java 17
+FROM eclipse-temurin:17-jdk-alpine
 WORKDIR /app
-
-# Copia o JAR gerado no estágio anterior (no Gradle, ele fica na pasta build/libs)
+# Ajuste o nome do .jar abaixo se o seu projeto tiver outro nome no build/libs
 COPY --from=build /app/build/libs/*.jar app.jar
-
-# Porta configurada no seu application.properties
 EXPOSE 8081
-
-# Comando de inicialização
 ENTRYPOINT ["java", "-jar", "app.jar"]
